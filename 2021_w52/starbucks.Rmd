@@ -1,0 +1,67 @@
+---
+title: "Spice Girls Lyrical Sentiment Analysis"
+author: "Jody Holland"
+date: "20/12/2021"
+output:
+    rmdformats::downcute:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(scales)
+library(magick)
+library(cowplot)
+```
+1
+```{r load-data}
+df_base <- read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-12-21/starbucks.csv") %>% as_tibble()
+
+df <- df_base %>% filter(milk == 1,
+                    serv_size_m_l > 0,
+                    size == "grande",
+                    whip == 0,
+                    grepl("Frappuccino", product_name))
+
+df$product_name <- gsub(" Frappuccino","", df$product_name)
+df$product_name <- gsub("Ã¨", "é", df$product_name)
+
+df$joules <- (df$calories * 4184)
+
+satv_joules <- 168 * (1.66*10^11)
+
+df$satv <- satv_joules/df$joules
+
+```
+```{r graph}
+
+options(scipen = 999)
+
+img <- image_read("https://cdn.pixabay.com/photo/2017/01/31/20/34/missile-2027068_960_720.png")
+fire <- image_read("https://cdn.pixabay.com/photo/2017/11/11/16/23/fire-2939426_960_720.png")
+
+a <- ggplot(df, aes(x = reorder(product_name, -satv), y = satv)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Frappucinos Needed to Launch a Saturn V Rocket",
+       subtitle = "Assuming 1 kcal of coffee is equivalent to 4.184 kJ of rocket fuel",
+       caption = "*Calculations using the first stage, with all cups as Grande, dairy milk, and no cream | Data Source: ",
+       x = "Drink", 
+       y = "Cups Required") +
+  scale_y_continuous(label=comma, limits = c(0, 60000000))
+
+ggdraw() +
+  draw_plot(a) +
+  draw_image(fire, 0.4, 0.07, scale = 0.02)
+  #draw_image(img, 0.4, 0.07, scale = 0.5)
+  
+
+```
+
+
