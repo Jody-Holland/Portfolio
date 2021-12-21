@@ -1,0 +1,100 @@
+---
+title: "Spice Girls Lyrical Sentiment Analysis"
+author: "Jody Holland"
+date: "20/12/2021"
+output:
+    rmdformats::downcute:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+So the aim of this first attempt is to analyse the lyrical sentiment across the songs in the dataset. This is different from the "valence" of the song that Spotify data uses as this is based purely off the lyrics gathered by GeniusR.
+
+To do so I will employ the "tidytext" package.
+```{r packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidytext)
+library(ggplot2)
+library(ggthemes)
+```
+
+
+To wrangle the data and find the sentiment scores, I first break the lyric lines into tokens. I use the "get_sentiments()" function to determine if these tokens are positive or negative in their sentiments. Giving positive values a 1 and negative values a -1, I then calculate the total sum of the sentiments to give each song a sentiment score. Dividing this score by the total number of tokens produces an "average sentiment" for each song.
+```{r format-data, message=FALSE}
+#load data as tibble
+df <- read_csv("lyrics.csv") %>% as_tibble()
+
+#create tokens (the words identified as sentiment signifies) from the lyrics
+tokens <- df %>% unnest_tokens(word, line) 
+
+#determine if the tokens are "positive" or "negative"
+#through using inner_join against a large dataset of sentiment evaluations
+#employing data from bing
+sentiment_df <- tokens %>%
+  inner_join(get_sentiments("bing")) 
+
+#create new column with numerical values to be used in total sentiment scoring
+sentiment_df$score <- if_else(sentiment_df$sentiment == "positive", 1, -1)
+
+#create column to be used in calculate total tokens for each song
+sentiment_df$length = 1
+
+#group into new df with total sentiment score and total tokens for seach song
+sentiment_df_total <- sentiment_df %>% 
+  group_by(album_name, song_name) %>% 
+  summarise(total = sum(score), length = sum(length))
+
+#calculate new column of average sentiment
+#which is the total sentiment score divided by the total number of tokens
+sentiment_df_total$average <- sentiment_df_total$total / sentiment_df_total$length
+``` 
+
+
+I plot these "average sentiment scores" using a bar chart displaying all 31 songs, grouped by album.
+```{r graph}
+
+#being plot of bar chart wherein the songs are grouped by album
+ggplot(sentiment_df_total, 
+       aes(x = reorder(song_name, average), y = average, fill = album_name)) +
+  geom_bar(stat = "identity") +
+  #create labels
+  labs(title = "Sentiment Analysis of Lyrics from 31 Spice Girls' Songs",
+       subtitle = "Most Positive = 1.0, Most Negative = -1.0",
+       caption = "Data Source: GeniusR",
+       x = "Song", 
+       y = "Average Sentiment Score",
+       fill = "Album") +
+  #use custom pastel colours for the album groupings
+  scale_fill_manual(values = c("#B5D8EB", "#FFC8BA", "#E3AAD6")) +
+  #i like the pander theme at the moment (from ggplot)
+  theme_pander() +
+  #angle and adjust the song names
+  theme(axis.text.x = element_text(size = 5, 
+                                   angle = 60, 
+                                   hjust=1, 
+                                   vjust=1),
+        #change plot title size
+        plot.title = element_text(size = 10),
+        plot.subtitle = element_text(size = 8),
+        #move legend to overlap graph
+        legend.position = c(0.12, 0.83),
+        #adjust legend text and size
+        legend.text=element_text(size=5), 
+        legend.title=element_text(size=7),
+        legend.key.size=unit(0.3, 'cm'),
+        #adjust axis info and text
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        axis.text.y = element_text(size = 7),
+        #adjust aspect ratio
+        aspect.ratio = 7/10) +
+  #make the plot have no padding , plus show the 1.0 and -1.0
+  scale_y_continuous(limits = c(-1, 1), 
+                     expand = c(0, 0))
+#export plot as png
+ggsave("plot.png", dpi = 320)
+```
+
