@@ -82,7 +82,8 @@ a <- ggplot(df, aes(x = reorder(product_name, -satv), y = satv)) +
         text = element_text(family="sans", size = 14),
         plot.title = element_text(size = 24),
         plot.subtitle = element_text(size = 15, colour = '#444444'),
-        axis.title.y = element_text(size = 15)) 
+        axis.title.y = element_text(size = 15),
+        plot.background = element_rect(colour = 'white')) 
 
 # plot the rocket with its flame
 ggdraw() +
