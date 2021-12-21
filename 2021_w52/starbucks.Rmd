@@ -18,50 +18,82 @@ library(ggthemes)
 library(scales)
 library(magick)
 library(cowplot)
+library(ggchicklet)
 ```
-1
+
 ```{r load-data}
+
+# read starbucks csv
 df_base <- read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-12-21/starbucks.csv") %>% as_tibble()
 
+# filter for grande frappuccino's with milk and whip
 df <- df_base %>% filter(milk == 1,
                     serv_size_m_l > 0,
                     size == "grande",
                     whip == 0,
                     grepl("Frappuccino", product_name))
 
+# format the product name text for plotting neatly
 df$product_name <- gsub(" Frappuccino","", df$product_name)
 df$product_name <- gsub("Ã¨", "é", df$product_name)
 
+# find the joules of energy for each drink
 df$joules <- (df$calories * 4184)
 
+# using https://en.wikipedia.org/wiki/Orders_of_magnitude_(power)#109_to_1014_W
+# find the joules the saturn v used in its 168 second first stage
 satv_joules <- 168 * (1.66*10^11)
 
+# calculate the number of cups needed to match that
 df$satv <- satv_joules/df$joules
-
 ```
-```{r graph}
 
-options(scipen = 999)
-
+```{r images}
+# load our rock and fire
 img <- image_read("https://cdn.pixabay.com/photo/2017/01/31/20/34/missile-2027068_960_720.png")
-fire <- image_read("https://cdn.pixabay.com/photo/2017/11/11/16/23/fire-2939426_960_720.png")
+fire <- image_read("https://cdn.pixabay.com/photo/2017/11/11/16/23/fire-2939426_960_720.png") %>%
+  image_rotate(180)
+```
 
+```{r graph}
+# plot the graph as object a
 a <- ggplot(df, aes(x = reorder(product_name, -satv), y = satv)) +
-  geom_bar(stat = "identity") +
+  # use nice starbucks'y colours
+  geom_chicklet(fill="#00704A") +
+  # make horizontal bar chart
   coord_flip() +
-  labs(title = "Frappucinos Needed to Launch a Saturn V Rocket",
-       subtitle = "Assuming 1 kcal of coffee is equivalent to 4.184 kJ of rocket fuel",
-       caption = "*Calculations using the first stage, with all cups as Grande, dairy milk, and no cream | Data Source: ",
-       x = "Drink", 
+  # label the graph
+  labs(title = "Frappucinos Required to Launch a Saturn V Rocket",
+       subtitle = "Assuming 1 kcal of coffee is equivalent to 4,184 J of rocket fuel",
+       caption = expression(italic("For the Saturn V first stage | All cups as grande (473ml), cow's milk and no whip | J.Holland | Data Source: Starbucks, Wikipedia")),
+       # remove x axis label
+       x = "", 
        y = "Cups Required") +
-  scale_y_continuous(label=comma, limits = c(0, 60000000))
+  # make custome y axis scale
+  scale_y_continuous(label=c("20000000" = "20 million",
+                             "40000000" = "40 million",
+                             "60000000" = "60 million"),
+                     limits = c(0, 60000000),
+                     breaks = c(20000000, 40000000, 60000000),
+                     expand = c(0, 0)) +
+  # set theming
+  theme_tufte() +
+  theme(plot.margin=unit(c(0.1,0.8,0.1,0.2), 'cm'),
+        text = element_text(family="sans"),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        axis.text.y = element_text(size = 6),
+        plot.caption = element_text(size = 7)) 
 
+# plot the rocket with its flame
+a
 ggdraw() +
   draw_plot(a) +
-  draw_image(fire, 0.4, 0.07, scale = 0.02)
-  #draw_image(img, 0.4, 0.07, scale = 0.5)
-  
+  draw_image(fire, 0.35, -0.25, scale = 0.06) +
+  draw_image(img, 0.35, 0.07, scale = 0.6)
 
+# save output
+ggsave("plot.png")
 ```
 
 
