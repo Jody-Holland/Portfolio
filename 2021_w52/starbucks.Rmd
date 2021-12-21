@@ -63,13 +63,13 @@ a <- ggplot(df, aes(x = reorder(product_name, -satv), y = satv)) +
   # make horizontal bar chart
   coord_flip() +
   # label the graph
-  labs(title = "Frappucinos Required to Launch a Saturn V Rocket",
-       subtitle = "Assuming 1 kcal of coffee is equivalent to 4,184 J of rocket fuel",
-       caption = expression(italic("For the Saturn V first stage | All cups as grande (473ml), cow's milk and no whip | J.Holland | Data Source: Starbucks, Wikipedia")),
+  labs(title = expression(bold("Frappuccinos Required to Launch a Saturn V Rocket")),
+       subtitle = "(...in a world where coffee can be used as rocket fuel)",
+       caption = expression(italic("For the Saturn V first stage | All cups as grande (473ml), cow's milk and no whip | Assuming 1 kcal of drink = 4,184 J of rocket fuel | J.Holland | Data Source: Starbucks, Wikipedia")),
        # remove x axis label
        x = "", 
        y = "Cups Required") +
-  # make custome y axis scale
+  # make custom y axis scale
   scale_y_continuous(label=c("20000000" = "20 million",
                              "40000000" = "40 million",
                              "60000000" = "60 million"),
@@ -78,22 +78,20 @@ a <- ggplot(df, aes(x = reorder(product_name, -satv), y = satv)) +
                      expand = c(0, 0)) +
   # set theming
   theme_tufte() +
-  theme(plot.margin=unit(c(0.1,0.8,0.1,0.2), 'cm'),
-        text = element_text(family="sans"),
-        axis.title.x = element_text(size = 10),
-        axis.title.y = element_text(size = 10),
-        axis.text.y = element_text(size = 6),
-        plot.caption = element_text(size = 7)) 
+  theme(plot.margin=unit(c(0.3,0.8,0.1,0.2), 'cm'),
+        text = element_text(family="sans", size = 14),
+        plot.title = element_text(size = 24),
+        plot.subtitle = element_text(size = 15, colour = '#444444'),
+        axis.title.y = element_text(size = 15)) 
 
 # plot the rocket with its flame
-a
 ggdraw() +
   draw_plot(a) +
   draw_image(fire, 0.35, -0.25, scale = 0.06) +
   draw_image(img, 0.35, 0.07, scale = 0.6)
 
 # save output
-ggsave("plot.png")
+ggsave("plot.png", dpi = 200)
 ```
 
 
