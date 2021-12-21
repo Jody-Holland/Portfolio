@@ -11,7 +11,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-So the aim of this first attempt is to analyse the lyrical sentiment across the songs in the dataset. This is different from the "valence" of the song that Spotify data uses as this is based purely off the lyrics gathered by GeniusR.
+So the aim of this first attempt is to analyse the lyrical sentiment across the songs in the dataset. 
+This is different from the "valence" of the song that Spotify data uses as this is based purely off the lyrics gathered by GeniusR.
 
 To do so I will employ the "tidytext" package.
 ```{r packages, message=FALSE, warning=FALSE}
@@ -22,7 +23,10 @@ library(ggthemes)
 ```
 
 
-To wrangle the data and find the sentiment scores, I first break the lyric lines into tokens. I use the "get_sentiments()" function to determine if these tokens are positive or negative in their sentiments. Giving positive values a 1 and negative values a -1, I then calculate the total sum of the sentiments to give each song a sentiment score. Dividing this score by the total number of tokens produces an "average sentiment" for each song.
+To wrangle the data and find the sentiment scores, I first break the lyric lines into tokens. 
+I use the "get_sentiments()" function to determine if these tokens are positive or negative in their sentiments.
+Giving positive values a 1 and negative values a -1, I then calculate the total sum of the sentiments to give
+each song a sentiment score. Dividing this score by the total number of tokens produces an "average sentiment" for each song.
 ```{r format-data, message=FALSE}
 #load data as tibble
 df <- read_csv("lyrics.csv") %>% as_tibble()
